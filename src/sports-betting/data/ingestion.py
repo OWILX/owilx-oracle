@@ -1,6 +1,8 @@
 import httpx
 from datetime import date
+from .supabase_client import supabase
 from ..config import settings
+
 
 async def fetch_daily_fixtures(league_id: int = None):
     """Fetch today's fixtures from API-Football and upsert into Supabase."""
@@ -14,7 +16,7 @@ async def fetch_daily_fixtures(league_id: int = None):
         resp = await client.get(url, params=params, headers=headers)
         resp.raise_for_status()
         fixtures = resp.json()["response"]
-    
+    print(fixtures) 
     for fix in fixtures:
         fixture = fix["fixture"]
         teams = fix["teams"]
@@ -28,6 +30,6 @@ async def fetch_daily_fixtures(league_id: int = None):
             "event_date": fixture["date"],
             "status": fixture["status"]["short"],
         }
-        #supabase.table("fixtures").upsert(data).execute()
-        print(data)
+        supabase.table("fixtures").upsert(data).execute()
+        #print(data)
     return len(fixtures)
