@@ -1,20 +1,17 @@
-import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # Supabase
-    SUPABASE_URL: str
-    SUPABASE_SERVICE_KEY: str   # for admin operations (table creation, etc.)
-    SUPABASE_ANON_KEY: str      # for public API (RLS allowed)
+    # NVIDIA NIM
+    NIM_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
+    NIM_API_KEY: str
+    NIM_MODEL_NAME: str = "meta/llama3-70b-instruct"   # placeholder – you'll change
 
     # API-Football
-    APIFOOTBALL_KEY: str = "7ca8515d2da4ed9b51ec01c674289fac"
-    APIFOOTBALL_BASE_URL: str = "https://v3.football.api-sports.io"
+    APIFOOTBALL_KEY: str
 
-    # NVIDIA NIM
-    NIM_BASE_URL: str
-    NIM_API_KEY: str
-    NIM_MODEL_NAME: str = "hermes-3-llama-3.2-3b"  # or "deepseek-ai/deepseek-coder-6.7b-instruct"
+    # Supabase
+    SUPABASE_URL: str
+    SUPABASE_SERVICE_KEY: str
 
     class Config:
         env_file = ".env"
