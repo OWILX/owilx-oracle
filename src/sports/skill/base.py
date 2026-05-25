@@ -1,22 +1,28 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
-from ..config import settings
-from playwright.async_api import async_playwright
-import asyncio
 
-class BettingSiteScraper:
-    def __init__(self):
-        self.playwright = None
-        self.browser = None
-        self.page = None
+class SiteScraper(ABC):
+    """Abstract base class for site scrapers."""
 
-    async def init(self):
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch()
-        self.page = await self.browser.new_page()
+    @abstractmethod
+    async def start(self):
+        """Initialize the browser and playwright context."""
+        pass
 
+    @abstractmethod
+    async def navigate_to_site(self, url: str):
+        """Navigate to the given URL."""
+        pass
+
+    @abstractmethod
+    async def extract_data(self, url: Optional[str] = None) -> Dict:
+        """
+        Extract data from the current page or the provided URL.
+        Should handle scrolling to load dynamic content and return structured data.
+        """
+        pass
+
+    @abstractmethod
     async def close(self):
-        if self.browser:
-            await self.browser.close()
-        if self.playwright:
-            await self.playwright.stop()
+        """Clean up browser and playwright resources."""
+        pass
