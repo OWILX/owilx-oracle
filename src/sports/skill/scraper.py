@@ -70,10 +70,10 @@ class SportScraper(SiteScraper):
         # TODO: Send HTML to an LLM for structured extraction
         # Placeholder for LLM integration – replace with actual call
         structured_data = await self._call_llm_for_odds(full_html)
-
-        return {
-            "structured_data": structured_data
-        }
+        return full_html
+        #return {
+        #    "structured_data": structured_data
+        #}
 
     async def _call_llm_for_odds(self, html: str) -> List[Dict]:
         """
