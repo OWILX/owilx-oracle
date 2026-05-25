@@ -2,9 +2,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # NVIDIA NIM
-    OPENAI_URL: str = "https://integrate.api.nvidia.com/v1"
-    OPENAI_API_KEY: str
-    OPENAI_MODEL_NAME: str
+    LLM_URL: str = "https://integrate.api.nvidia.com/v1"
+    LLM_API_KEY: str
+    LLM_NAME: str
 
     # Supabase
     SUPABASE_URL: str
