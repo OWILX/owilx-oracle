@@ -1,16 +1,16 @@
-[build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "sports-betting"
+name = "owilx-oracle"
 version = "0.1.0"
 dependencies = [
     "python-dotenv",
     "pydantic-settings",
     "openai",
-    "httpx"
+    "httpx",
+    "playwright"
 ]
 
 [project.scripts]
 owilx-sports = "sports.cli:app"
+
+[project.optional-dependencies]
+playwright = ["playwright"]
