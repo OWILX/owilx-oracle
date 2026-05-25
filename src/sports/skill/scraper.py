@@ -29,12 +29,12 @@ class SportScraper(SiteScraper):
         self.page = await self.context.new_page()
         
         # Block unnecessary resources (images, fonts, CSS, etc.) to speed up loading
-        await self.page.route("**/*.{png,jpg,jpeg,gif,svg,webp,ico,css}", self._abort_route)
+        await self.page.route("**/*.{png,jpg,jpeg,gif,svg,webp,ico,css,woff,woff2,ttf,otf,eot,map}", self._abort_route)
         # Optionally also block analytics and tracking scripts (adjust as needed)
-        #await self.page.route("**/gtm.js", self._abort_route)
-        #await self.page.route("**/gtag/js*", self._abort_route)
-        #await self.page.route("**/analytics*", self._abort_route)
-        #await self.page.route("**/fullstory*", self._abort_route)
+        await self.page.route("**/gtm.js", self._abort_route)
+        await self.page.route("**/gtag/js*", self._abort_route)
+        await self.page.route("**/analytics*", self._abort_route)
+        await self.page.route("**/fullstory*", self._abort_route)
 
     async def _abort_route(self, route):
         """Abort requests for blocked resources."""
@@ -84,6 +84,7 @@ class SportScraper(SiteScraper):
         
         return {
             "html": content_html,
+            "url": url,
             #"structured_data": structured_data
         }
 

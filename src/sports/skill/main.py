@@ -8,6 +8,7 @@ async def main():
     #print(f"Extracted {len(data['structured_data'])} matches")
     with open("filtered_content.html", "w") as f:
         f.write(data["html"])
+    print(data["url"])
     await scraper.close()
 
 if __name__ == "__main__":
