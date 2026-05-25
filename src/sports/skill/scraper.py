@@ -1,4 +1,7 @@
 import asyncio
+import os
+import json
+import openai
 from typing import Dict, List, Literal, Optional
 from playwright.async_api import async_playwright
 from .base import SiteScraper
@@ -24,6 +27,18 @@ class SportScraper(SiteScraper):
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
         self.context = await self.browser.new_context(**iphone)
         self.page = await self.context.new_page()
+        
+        # Block unnecessary resources (images, fonts, CSS, etc.) to speed up loading
+        await self.page.route("**/*.{png,jpg,jpeg,gif,svg,webp,ico,css,woff,woff2,ttf,otf,eot,map}", self._abort_route)
+        # Optionally also block analytics and tracking scripts (adjust as needed)
+        await self.page.route("**/gtm.js", self._abort_route)
+        await self.page.route("**/gtag/js*", self._abort_route)
+        await self.page.route("**/analytics*", self._abort_route)
+        await self.page.route("**/fullstory*", self._abort_route)
+
+    async def _abort_route(self, route):
+        """Abort requests for blocked resources."""
+        await route.abort()
 
     async def navigate_to_site(self, url: str):
         """Go to the specified URL."""
@@ -31,60 +46,118 @@ class SportScraper(SiteScraper):
             await self.page.goto(url, wait_until="networkidle")
 
     async def extract_data(self, url: Optional[str] = None) -> Dict:
-        """
-        Load the full page (with scrolling to trigger dynamic loading),
-        extract the final HTML, and optionally send it to an LLM for structured data extraction.
-        Returns a dictionary with at least 'html' and optionally 'structured_data'.
-        """
-        # Build default URL if none provided
+        """Load the page, scroll to load all content, then extract data."""
         if url is None:
-            base_url = "https://www.football.com/ng/m/sport"
-            url = f"{base_url}/{self.sport}/today/"
+            url = f"https://www.football.com/ng/m/sport/{self.sport}/today/"
 
         await self.navigate_to_site(url)
-        await asyncio.sleep(3)
-        current_position = 0
-        scroll_step = 800           # pixels per scroll
-        max_checks_without_change = 3
-        checks_without_change = 0
+        await asyncio.sleep(2)
 
-        while True:
-            current_position += scroll_step
-            await self.page.evaluate(f"window.scrollTo(0, {current_position});")
-            await asyncio.sleep(1.5)   # wait for new content to load
+        # Scroll to load all dynamic content
+        last_height = 0
+        for _ in range(30):  # safety limit
+            await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            await asyncio.sleep(1.8)
+            
+            new_height = await self.page.evaluate("document.body.scrollHeight")
+            if new_height == last_height:
+                await asyncio.sleep(2)  # final wait for any last content
+                break
+            last_height = new_height
 
-            scroll_height = await self.page.evaluate("document.documentElement.scrollHeight")
-            print(f"Scrolled to {current_position}px / total height {scroll_height}px")
+                # Extract only the main content div with class "page-content page-content--ng"
+        content_html = await self.page.evaluate("""
+            () => {
+                const contentDiv = document.querySelector('.page-content.page-content--ng');
+                return contentDiv ? contentDiv.outerHTML : '';
+            }
+        """)
 
-            if current_position >= scroll_height:
-                checks_without_change += 1
-                await asyncio.sleep(2)   # extra time for last‑minute loading
-                if checks_without_change >= max_checks_without_change:
-                    print("Reached the bottom of the page.")
-                    break
-            else:
-                checks_without_change = 0   # reset because page is still growing
+        if not content_html:
+            # Fallback: take the whole page content if the specific div isn't found
+            content_html = await self.page.content()
+            print("Warning: could not find .page-content.page-content--ng, using full HTML.")
 
-        full_html = await self.page.content()
 
-        # TODO: Send HTML to an LLM for structured extraction
-        # Placeholder for LLM integration – replace with actual call
-        structured_data = await self._call_llm_for_odds(full_html)
-        #return full_html
+        # Send HTML to the LLM for structured extraction
+        structured_data = await self._call_llm_for_extraction(content_html)
+        
         return {
-               "html": full_html,
-        #    "structured_data": structured_data
+            "html": content_html,
+            "structured_data": structured_data
         }
 
-    async def _call_llm_for_odds(self, html: str) -> List[Dict]:
+    async def _call_llm_for_extraction(self, html: str) -> List[Dict]:
         """
-        Placeholder method to send HTML to an LLM and parse fixtures, odds, etc.
-        Replace this with actual LLM API calls (e.g., OpenAI, Anthropic, local model).
+        Call OpenAI API (or compatible endpoint) to extract structured data from HTML.
         """
-        # Example: Extract team names, leagues, times, odds from the HTML
-        # For now, return an empty list
-        print("LLM extraction not implemented yet – returning empty list.")
-        return []
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        
+        base_url = os.getenv("OPENAI_BASE_URL")
+        model = os.getenv("OPENAI_MODEL_NAME", "gpt-3.5-turbo")
+
+        client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+        system_prompt = f"""
+You are an expert at extracting sports betting data from HTML.
+
+Extract all visible matches from the provided HTML into a clean JSON object with this exact structure:
+
+{{
+  "matches": [
+    {{
+      "home_team": "string",
+      "away_team": "string",
+      "time": "string",           // Format: "25, May 16:00"
+      "league": "string",
+      "odds": {{
+        "home_win": float | null,
+        "draw": float | null,
+        "away_win": float | null
+      }}
+    }}
+  ]
+}}
+
+Rules:
+- Only extract matches that have at least home/away teams + some odds.
+- For basketball, baseball, americanFootball → "draw" must be null.
+- For football/soccer → "draw" is usually present.
+- Use null for any missing odd.
+- Be precise with team names (full names as shown).
+- Detect the correct sport context from the page.
+- If odds are in different formats (e.g. American +150), convert to decimal if possible, otherwise null.
+- Return ONLY valid JSON. No explanations.
+"""
+
+        user_prompt = f"Extract matches and odds from this HTML:\n\n{html[:30000]}"
+
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.2
+            )
+
+            content = response.choices[0].message.content
+            parsed = json.loads(content)
+            
+            if isinstance(parsed, dict) and "matches" in parsed:
+                return parsed["matches"]
+            elif isinstance(parsed, list):
+                return parsed
+            else:
+                print("Unexpected JSON structure from LLM:", parsed)
+                return []
+        except Exception as e:
+            print(f"Error calling LLM: {e}")
+            return []
 
     async def close(self):
         """Clean up resources."""
