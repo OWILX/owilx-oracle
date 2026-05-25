@@ -66,13 +66,13 @@ class SportScraper(SiteScraper):
             last_height = new_height
 
                 # Extract only the main content div with class "page-content page-content--ng"
-        content_html = await self.page.evaluate("""
-            () => {
-                const contentDiv = document.querySelector('.page-content.page-content--ng');
-                return contentDiv ? contentDiv.outerHTML : '';
-            }
-        """)
-
+        #content_html = await self.page.evaluate("""
+        #    () => {
+        #        const contentDiv = document.querySelector('.page-content.page-content--ng');
+        #        return contentDiv ? contentDiv.outerHTML : '';
+        #    }
+        #""")
+        content_html = await self.page.content()
         if not content_html:
             # Fallback: take the whole page content if the specific div isn't found
             content_html = await self.page.content()
@@ -80,11 +80,11 @@ class SportScraper(SiteScraper):
 
 
         # Send HTML to the LLM for structured extraction
-        #structured_data = await self._call_llm_for_extraction(content_html)
+        structured_data = await self._call_llm_for_extraction(content_html)
         
         return {
             "html": content_html,
-            #"structured_data": structured_data
+            "structured_data": structured_data
         }
 
     async def _call_llm_for_extraction(self, html: str) -> List[Dict]:
