@@ -25,7 +25,15 @@ class SportScraper(SiteScraper):
         if iphone is None:
             iphone = {"viewport": {"width": 390, "height": 844}}
         self.browser = await self.playwright.chromium.launch(headless=self.headless)
-        self.context = await self.browser.new_context(**iphone)
+        self.context = await self.browser.new_context(**iphone,
+        geolocation={
+            "latitude": 6.5244,
+            "longitude": 3.3792
+        },
+        permissions=["geolocation"],
+        locale="en-US",
+        timezone_id="Africa/Lagos")
+        
         self.page = await self.context.new_page()
         
         # Block unnecessary resources (images, fonts, CSS, etc.) to speed up loading
