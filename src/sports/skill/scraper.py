@@ -80,11 +80,11 @@ class SportScraper(SiteScraper):
 
 
         # Send HTML to the LLM for structured extraction
-        structured_data = await self._call_llm_for_extraction(content_html)
+        #structured_data = await self._call_llm_for_extraction(content_html)
         
         return {
             "html": content_html,
-            "structured_data": structured_data
+            #"structured_data": structured_data
         }
 
     async def _call_llm_for_extraction(self, html: str) -> List[Dict]:
