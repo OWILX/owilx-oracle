@@ -91,12 +91,12 @@ class SportScraper(SiteScraper):
         """
         Call OpenAI API (or compatible endpoint) to extract structured data from HTML.
         """
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("LLM_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+            raise ValueError("LLM_API_KEY environment variable not set")
         
-        base_url = os.getenv("OPENAI_BASE_URL")
-        model = os.getenv("OPENAI_MODEL_NAME", "gpt-3.5-turbo")
+        base_url = os.getenv("LLM_URL")
+        model = os.getenv("LLM_NAME")
 
         client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
 
