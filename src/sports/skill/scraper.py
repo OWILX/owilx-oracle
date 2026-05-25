@@ -97,7 +97,7 @@ class SportScraper(SiteScraper):
         
         base_url = os.getenv("LLM_URL")
         model = os.getenv("LLM_NAME")
-
+        reasoning_effort = os.getenv("REASONING_EFFORT", "none")   # "none", "high", "max"
         client = openai.AsyncOpenAI(api_key=api_key, base_url=base_url)
 
         system_prompt = f"""
@@ -142,7 +142,8 @@ Rules:
                     {"role": "user", "content": user_prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.2
+                temperature=0.2,
+                extra_body={"reasoning_effort": reasoning_effort}
             )
 
             content = response.choices[0].message.content
