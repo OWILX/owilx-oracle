@@ -7,8 +7,10 @@ name = "sports-betting"
 version = "0.1.0"
 dependencies = [
     "python-dotenv",
-    "pydantic-settings"
+    "pydantic-settings",
+    "openai",
+    "httpx"
 ]
 
 [project.scripts]
-sports-betting = "sports_betting.cli:app"
+owilx-sports = "sports.cli:app"
