@@ -8,4 +8,5 @@ async def main():
     print(data["html"][:500])
     await scraper.close()
 
-await main()
+if __name__ == "__main__":
+    asyncio.run(main())
