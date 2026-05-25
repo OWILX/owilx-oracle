@@ -2,7 +2,7 @@ import asyncio
 from .scraper import SportScraper 
 
 async def main():
-    scraper = SportScraper(sport="basketball", headless=False)
+    scraper = SportScraper(sport="basketball", headless=True)
     await scraper.start()
     data = await scraper.extract_data()
     print(data["html"][:500])
