@@ -12,7 +12,7 @@ class DailyFixtureTool:
         """Get today's games for a specific sport"""
         # Map sports to their API paths
         sport_paths = {
-            "soccer": "soccer/league/v4",
+            "soccer": "soccer/trial/v4/en",
             "basketball": "basketball/nba/trial/v7",
             "baseball": "baseball/mlb/trial/v7", 
             "americanFootball": "american-football/nfl/trial/v7"
@@ -25,7 +25,7 @@ class DailyFixtureTool:
         today = date.today().strftime('%Y-%m-%d')
 
         # Build the correct API endpoint
-        url = f"{self.base_url}/{sport_paths[sport]}/schedules/{today}/schedule.json"
+        url = f"{self.base_url}/{sport_paths[sport]}/schedules/{today}/schedules"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
