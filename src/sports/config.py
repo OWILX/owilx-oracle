@@ -5,14 +5,13 @@ class Settings(BaseSettings):
     LLM_URL: str = "https://integrate.api.nvidia.com/v1"
     LLM_API_KEY: str
     LLM_NAME: str
-
+    REASONING_EFFORT:str
     # Supabase
     SUPABASE_URL: str
     SUPABASE_SERVICE_KEY: str
     SUPABASE_ANON_KEY: str
 
     # Sportradar
-
     SPORTRADAR_API_KEY: str
 
     class Config:
