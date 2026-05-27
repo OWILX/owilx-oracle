@@ -25,7 +25,7 @@ class DailyFixtureTool:
         today = date.today().strftime('%Y-%m-%d')
 
         # Build the correct API endpoint
-        url = f"{self.base_url}/{sport_paths[sport]}/schedules/{today}/schedules"
+        url = f"{self.base_url}/{sport_paths[sport]}/schedules/{today}/schedules.json"
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
