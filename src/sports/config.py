@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_KEY: str
     SUPABASE_ANON_KEY: str
 
+    # Sportradar
+
+    SPORTRADAR_API_KEY: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
