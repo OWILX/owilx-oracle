@@ -6,7 +6,7 @@ from ..config import settings
 class DailyFixtureTool:
     def __init__(self):
         self.api_key = settings.SPORTRADAR_API_KEY
-        self.base_url = "https://api.sportsradar.com"
+        self.base_url = "https://api.sportradar.com"
 
     async def get_todays_games(self, sport: Literal["soccer", "basketball", "baseball", "americanFootball"] = "soccer") -> Dict:
         """Get today's games for a specific sport"""
